@@ -1,0 +1,10 @@
+hadoopchecks - utilities checking for hdfs/mapred healthy
+
+1) hdfscheck.sh
+   check hdfs for dead datanode or over-use
+
+2) hjobcheck.sh
+   check mapred for abnormal job completions and too-long jobs.
+
+3) hmrcheck.sh
+   check for mapred availability.
