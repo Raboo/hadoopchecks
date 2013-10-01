@@ -2,6 +2,7 @@
 
 OVERUSE=75
 CHECK_INTVL=180
+COMMAND="/usr/bin/hdfs"
 
 function WARN() {
 	echo "`date "+%Y-%m-%d %H:%M:%S"` [WARN] ""$@"
@@ -33,11 +34,11 @@ done
 while [[ true ]]; do
 	SUM=0
 	if [ "${OVERUSE}" != "" ]; then
-		for us in `hadoop dfsadmin -report | egrep "^DFS Used%: " | sed 's/DFS Used%: //' | egrep -o '^[0-9]+'`; do
+		for us in `${COMMAND} dfsadmin -report | egrep "^DFS Used%: " | sed 's/DFS Used%: //' | egrep -o '^[0-9]+'`; do
 			[ $us -ge $OVERUSE ] && SUM=$(( $SUM + 1))
 		done
 	fi
-	DEADNODE=`hadoop dfsadmin -report | egrep "^Datanodes available: " | egrep -o "[0-9]+ dead" | awk '{print $1}'`
+	DEADNODE=`${COMMAND} dfsadmin -report | egrep "^Datanodes available: " | egrep -o "[0-9]+ dead" | awk '{print $1}'`
 	[ "${SUM}" != "0" ] && WARN "${SUM} nodes are hdfs over-used by ${OVERUSE}"
 	[ "${DEADNODE}" != "0" ] && WARN "${DEADNODE} nodes is dead"
 	sleep ${CHECK_INTVL}
