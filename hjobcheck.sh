@@ -4,6 +4,7 @@ INVERT=false
 
 MAX_RUN_TIME=60
 CHECK_INTVL=180
+COMMAND="/usr/bin/mapred" 
 
 function WARN() {
 	echo "`date "+%Y-%m-%d %H:%M:%S"` [WARN] ""$@"
@@ -56,15 +57,15 @@ while [[ true ]]; do
 	(debug "status checking after ($LASTJOBID)...")
 	#check for job status
 	if [ "${LASTJOBID}" = "" ]; then
-		CHECKLIST=(`hadoop job -list all | grep "^job_" | awk '{print $1}' | sort | tail -n 1`)
+		CHECKLIST=(`${COMMAND} job -list all | grep "^job_" | awk '{print $1}' | sort | tail -n 1`)
 		LASTJOBID=${CHECKLIST[0]}
 	else
-		CHECKLIST=(`hadoop job -list all | grep "^job_" | awk '{print $1}' | sort | sed -e "1,/${LASTJOBID}/d"`)
+		CHECKLIST=(`${COMMAND} job -list all | grep "^job_" | awk '{print $1}' | sort | sed -e "1,/${LASTJOBID}/d"`)
 	fi
 	if [ ${#CHECKLIST[@]} -gt 0 ]; then
 		freeze=no
 		for jobid in ${CHECKLIST[@]}; do
-			joburl=`hadoop job -status ${jobid} | grep "^tracking URL: " | sed 's/tracking URL: //'`
+			joburl=`${COMMAND} job -status ${jobid} | grep "^tracking URL: " | sed 's/tracking URL: //'`
 			status=`curl ${joburl} 2>/dev/null | egrep -o "<b>Status:</b> (\w+)" | awk '{print $2}'`
 			status=`echo $status | tr '[A-Z]' '[a-z]'`
 			(debug "job $jobid url $joburl $status")
@@ -75,10 +76,10 @@ while [[ true ]]; do
 		done
 	fi
 	#check for over-run-time jobs
-	CHECKLIST=(`hadoop job -list | grep "^job_" | awk '{print $1}'`)
+	CHECKLIST=(`${COMMAND} job -list | grep "^job_" | awk '{print $1}'`)
 	if [ ${#CHECKLIST[@]} -gt 0 ]; then
 		for jobid in ${CHECKLIST[@]}; do
-			joburl=`hadoop job -status ${jobid} | grep "^tracking URL: " | sed 's/tracking URL: //'`
+			joburl=`${COMMAND} job -status ${jobid} | grep "^tracking URL: " | sed 's/tracking URL: //'`
 			RUNNINGFOR=`curl ${joburl} 2>/dev/null | egrep -o "<b>Running for:</b> (.*)"`
 			[ "$RUNNINGFOR" = "" ] && continue
 			hrs=`echo "${RUNNINGFOR}" | egrep -o "[0-9]+hrs," | egrep -o "[0-9]+"`
